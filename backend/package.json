@@ -1,0 +1,23 @@
+{
+  "name": "blue-medical-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "mocha --reporter spec"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  },
+  "devDependencies": {
+    "chai": "^4.4.1",
+    "mocha": "^10.6.0",
+    "nock": "^13.5.2",
+    "supertest": "^7.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
