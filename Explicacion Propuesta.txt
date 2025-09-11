@@ -1,0 +1,70 @@
+Diagrama 1
+
+GitHub
+Creacion de solicitud de PR activa el pipeline.
+
+CodePipeline (Source)
+Solo coordina etapas y mueve artefactos.
+
+CodePipeline → CodeBuild (Build)
+
+Instala dependencias y corre tests (Mocha/Chai/Supertest).
+
+Construye dos imágenes: frontend y backend.
+
+Empuja esas imágenes a ECR con dos etiquetas: latest y el SHA del commit (sirve para saber exactamente qué versión corre).
+
+Genera imagedefinitions.json (un archivo JSON muy simple que dice “para el contenedor frontend usa la imagen X y para backend usa la imagen Y”). Ese JSON se sube como artefacto al bucket de S3 del pipeline.
+
+CodePipeline (Deploy)
+Toma imagedefinitions.json y actualiza los servicios de ECS Fargate.
+ECS “hace pull” de las imágenes desde ECR y levanta las tasks nuevas.
+
+Objetivo:
+
+Separar orquestación de ejecución: CodePipeline coordina; CodeBuild construye y prueba.
+
+imagedefinitions.json evita “magia”: el deploy sabe qué imagen exacta va en cada contenedor.
+
+Tag por SHA = trazabilidad y “build once, deploy many”: lo que se probó es lo que se despliega.
+
+CodeDeploy Blue/Green entre Build y Deploy para cero downtime y rollback automático si los health checks del ALB fallan.
+
+ECR image scanning para vulnerabilidades básicas en las imágenes.
+
+
+Diagrama 2
+
+Route 53 + ACM + ALB (HTTPS)
+
+Route 53 resuelve el dominio.
+
+ACM aporta el certificado SSL.
+
+ALB escucha en :443 y enruta por path:
+
+/* → frontend (Nginx, puerto 80).
+
+/api/* → backend (Node/Express, puerto 3000).
+
+ECS Fargate (dos services)
+
+Service frontend: sirve los archivos estáticos del build (Nginx).
+
+Service backend: expone /health y /api/....
+
+ECR, CloudWatch, Parameter Store
+
+ECR: origen de imágenes (ECS hace pull en cada despliegue).
+
+CloudWatch: logs de ambos contenedores y alarmas básicas.
+
+Parameter Store: variables y secretos del backend sin guardarlos en el repo.
+
+Objetico:
+
+ALB con rutas simplifica: no necesito subdominios ni dos balanceadores.
+
+Fargate evita administrar servidores; pago por uso.
+
+Logs y secretos centralizados.
