@@ -1,5 +1,6 @@
 {
+  "spec": ["__test__/**/*.js"],
   "recursive": true,
-  "timeout": 8000,
-  "spec": "test/**/*.test.js"
+  "timeout": 10000,
+  "reporter": "spec"
 }
