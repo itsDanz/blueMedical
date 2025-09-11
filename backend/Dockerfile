@@ -1,15 +1,22 @@
-# Backend Dockerfile
-FROM node:20-alpine
-
+# ---------- Base (instala TODAS las deps, incluidas dev) ----------
+FROM node:20-alpine AS base
 WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
 
-COPY package.json package-lock.json* ./
-RUN npm ci --only=production
-
-COPY src ./src
-
+# ---------- Producción ----------
+FROM node:20-alpine AS prod
+WORKDIR /app
 ENV NODE_ENV=production
+COPY package*.json ./
+RUN npm ci --omit=dev
+COPY src ./src
 ENV PORT=3000
 EXPOSE 3000
+CMD ["node","src/server.js"]
 
-CMD ["npm", "start"]
+# ---------- Tests ----------
+FROM base AS test
+ENV NODE_ENV=test
+CMD ["npm","test"]
